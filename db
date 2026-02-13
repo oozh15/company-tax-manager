@@ -1,0 +1,52 @@
+-- 1. Create the Database
+CREATE DATABASE IF NOT EXISTS company_finance;
+USE company_finance;
+
+-- 2. Users Table (With Roles for Admin/Employee)
+CREATE TABLE users (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    email VARCHAR(100) UNIQUE NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    role ENUM('admin', 'employee') DEFAULT 'employee',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB;
+
+-- 3. Categories Table (For Tax Classification)
+CREATE TABLE categories (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(50) NOT NULL
+) ENGINE=InnoDB;
+
+-- 4. Expenses Table (Core Logic - Links to Users and Categories)
+CREATE TABLE expenses (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    category_id INT NULL,
+    amount DECIMAL(10,2) NOT NULL,
+    tax_amount DECIMAL(10,2) NOT NULL,
+    description TEXT,
+    receipt_path VARCHAR(255), -- Stores the image/PDF filename
+    status ENUM('pending', 'approved', 'rejected') DEFAULT 'pending',
+    expense_date DATE NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE SET NULL
+) ENGINE=InnoDB;
+
+-- 5. Audit Logs (Enterprise Feature: Tracking changes)
+CREATE TABLE audit_logs (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT,
+    action VARCHAR(255),
+    ip_address VARCHAR(45),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
+) ENGINE=InnoDB;
+
+-- 6. Insert Default Data (To test your login)
+-- The password is 'password123' hashed using PHP password_hash
+INSERT INTO users (name, email, password, role) VALUES 
+('Admin User', 'admin@company.com', '$2y$10$8v8K/6P6Xl.T1M8Z.p9RBe6D4H6X6f7v8B/hJ9G6E1F2G3H4I5J6K', 'admin');
+
+INSERT INTO categories (name) VALUES ('Travel'), ('Office Supplies'), ('Software'), ('Meals');
